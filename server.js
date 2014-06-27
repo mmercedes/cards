@@ -1,159 +1,264 @@
-#!/bin/env node
-//  OpenShift sample Node application
+
+/* SERVER STATE GLOBALS */
+var ip = process.env.OPENSHIFT_NODEJS_IP;
+var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
+var fs = require('fs');
 var express = require('express');
-var fs      = require('fs');
+var http = require('http');
+var UUID = require('node-uuid');
+var app = express();
+var server = http.createServer(app);
 
 
-/**
- *  Define the sample application.
- */
-var SampleApp = function() {
-
-    //  Scope.
-    var self = this;
-
-
-    /*  ================================================================  */
-    /*  Helper functions.                                                 */
-    /*  ================================================================  */
-
-    /**
-     *  Set up server IP address and port # using env variables/defaults.
-     */
-    self.setupVariables = function() {
-        //  Set the environment variables we need.
-        self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
-        self.port      = process.env.OPENSHIFT_NODEJS_PORT || 8080;
-
-        if (typeof self.ipaddress === "undefined") {
-            //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
-            //  allows us to run/test the app locally.
-            console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
-            self.ipaddress = "127.0.0.1";
-        };
-    };
+/* GAME STATE GLOBALS */
+var lobby = [];
+var players = [];
+var pendPlayers = [];
+var highestScore = 0;
+var submissions = [];
+var submitIDs = [];
+var ingame = false;
+var judge;
+var cards = JSON.parse(fs.readFileSync("cards.json", "utf8"));
+var roundInfo = {};
+var roundWinner = null;
+var submitTimeout;
+var judgeTimeout;
 
 
-    /**
-     *  Populate the cache.
-     */
-    self.populateCache = function() {
-        if (typeof self.zcache === "undefined") {
-            self.zcache = { 'index.html': '' };
+/* CONSTANTS */
+var MAX_PLAYERS = 8;
+var MIN_PLAYERS = 2;
+
+
+if (typeof ip === "undefined") {
+    //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
+    //  allows us to run/test the app locally.
+    console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
+    ip = "127.0.0.1";
+};
+
+server.listen(port);
+console.log("\n STARTED SERVER ON PORT " + port + "\n");
+
+var socket = require('socket.io').listen(server);
+
+app.get( '/', function( req, res ){
+    res.sendfile('game.html');
+});
+
+app.get( '/*' , function( req, res, next ) {
+    //This is the current file they have requested
+	var file = req.params[0];
+	res.sendfile( __dirname + '/' + file );
+});
+
+
+function disconnect(client){
+    for(var i = 0; i < players.length; i++){
+        if(players[i].userid == client.userid){
+            players.splice(i, 1);
+            if(players.length == MIN_PLAYERS-1){
+                ingame = false;
+                console.log("GAME ENDED");
+            }
+            break;
         }
-
-        //  Local cache for static content.
-        self.zcache['index.html'] = fs.readFileSync('./index.html');
-    };
-
-
-    /**
-     *  Retrieve entry (content) from cache.
-     *  @param {string} key  Key identifying content to retrieve from cache.
-     */
-    self.cache_get = function(key) { return self.zcache[key]; };
-
-
-    /**
-     *  terminator === the termination handler
-     *  Terminate server on receipt of the specified signal.
-     *  @param {string} sig  Signal to terminate on.
-     */
-    self.terminator = function(sig){
-        if (typeof sig === "string") {
-           console.log('%s: Received %s - terminating sample app ...',
-                       Date(Date.now()), sig);
-           process.exit(1);
+    }
+    for(var i = 0; i < pendPlayers.length; i++){
+        if(pendPlayers[i].userid == client.userid){
+            pendPlayers.splice(i, 1);
+            break;
         }
-        console.log('%s: Node server stopped.', Date(Date.now()) );
-    };
-
-
-    /**
-     *  Setup termination handlers (for exit and a list of signals).
-     */
-    self.setupTerminationHandlers = function(){
-        //  Process on exit and signals.
-        process.on('exit', function() { self.terminator(); });
-
-        // Removed 'SIGPIPE' from the list - bugz 852598.
-        ['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGTRAP', 'SIGABRT',
-         'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV', 'SIGUSR2', 'SIGTERM'
-        ].forEach(function(element, index, array) {
-            process.on(element, function() { self.terminator(element); });
-        });
-    };
-
-
-    /*  ================================================================  */
-    /*  App server functions (main app logic here).                       */
-    /*  ================================================================  */
-
-    /**
-     *  Create the routing table entries + handlers for the application.
-     */
-    self.createRoutes = function() {
-        self.routes = { };
-
-        self.routes['/asciimo'] = function(req, res) {
-            var link = "http://i.imgur.com/kmbjB.png";
-            res.send("<html><body><img src='" + link + "'></body></html>");
-        };
-
-        self.routes['/'] = function(req, res) {
-            res.setHeader('Content-Type', 'text/html');
-            res.send(self.cache_get('index.html') );
-        };
-    };
-
-
-    /**
-     *  Initialize the server (express) and create the routes and register
-     *  the handlers.
-     */
-    self.initializeServer = function() {
-        self.createRoutes();
-        self.app = express.createServer();
-
-        //  Add handlers for the app (from the routes).
-        for (var r in self.routes) {
-            self.app.get(r, self.routes[r]);
+    }
+    for(var i = 0; i < lobby.length; i++){
+        if(lobby[i].userid == client.userid){
+            lobby.splice(i, 1);
+            break;
         }
-    };
+    }
+}
+
+function setName(client, data){
+    client.username = data.username;
+
+    for(var i = 0; i < lobby.length; i++){
+        if(lobby[i].userid == client.userid){
+            lobby.splice(i, 1);
+            break;
+        }
+    }
+    if(ingame){
+        pendPlayers.push(client);
+        client.emit("pending", roundInfo);
+    }
+    else{
+        if(players.length >= MAX_PLAYERS){
+            client.emit('disconnect');
+            return;
+        }
+        players.push(client);
+        if(players.length == MIN_PLAYERS) startGame();
+    }
+}
+
+function sendMessage(client, data){
+	socket.sockets.emit("message", {username:client.username, msg:data.msg});
+}
+
+function startGame(){
+	console.log("GAME STARTED");
+	ingame = true;
+	socket.sockets.emit('start', {});
+	for(var i = 0; i < players.length; i++){
+			players[i].score = 0;
+	}
+	playRound();
+}
+
+function endGame(){
+    highestScore = 0;
+    ingame = false;
+    return;
+}
+
+function playRound(){
+    while(players.length < MAX_PLAYERS && pendPlayers.length > 0){
+        pendPlayers[0].score = 0;
+        players.push(pendPlayers[0]);
+        pendPlayers.shift();
+    }
+    if(players.length < MIN_PLAYERS){
+        endGame();
+        return;
+    }
+	console.log("ROUND STARTED");
+
+    judge = players[Math.floor(Math.random()*players.length)];
+
+	roundInfo.card = getBlackCard();
+    roundInfo.judge = judge.userid;
+	roundInfo.players = [];
+
+	for(var i = 0; i < players.length; i++){
+		roundInfo.players.push({username:players[i].username,
+								score:players[i].score})
+	}
+	socket.sockets.emit('roundStart', roundInfo);
+	// wait 62 seconds to gather responses
+	submitTimeout = setTimeout(function (){
+		console.log("SUBMIT TIME OVER");
+		forwardSubmissions();
+		// wait 62 seconds for judge to pick
+		judgeTimeout = setTimeout(updateScore, 62000);
+	}, 62000);
+}
+
+function getBlackCard(){
+	return cards.bcards[Math.floor(Math.random()*cards.bcards.length)];
+}
+
+function getCards(client, data){
+	var index;
+	var sendData = {};
+	sendData.cards = [];
+	for(var i = 0; i < data.num; i++){
+		index = Math.floor(Math.random()*cards.wcards.length)
+		sendData.cards.push(cards.wcards[index]);
+	}
+	client.emit('setHand', sendData);
+}
+
+function addSubmission(id, submission){
+	submissions.push(submission);
+	submitIDs.push(id);
+	if(submissions.length === players.length){
+		clearTimeout(submitTimeout);
+		forwardSubmissions();
+		judgeTimeout = setTimeout(updateScore, 62000);
+	}
+}
+
+function forwardSubmissions(){
+	if(submissions.length > 0){
+		console.log(submitIDs);
+		judge.emit('judgeCards', {subs:submissions, subIDs:submitIDs});
+		submissions = [];
+		submitIDs = [];
+	}
+	else console.log("NO SUBMISSIONS RECEIVED");
+}
+
+function setRoundWinner(userid){
+	for(var i = 0; i < players.length; i++){
+		if(players[i].userid === userid){
+			roundWinner = players[i];
+			break;
+		}
+	}
+	clearTimeout(judgeTimeout);
+	updateScore();
+}
+
+function updateScore(){
+	console.log("JUDGE TIME OVER");
+	if(roundWinner != null){
+		roundWinner.score += 1;
+		if(roundWinner.score > highestScore){
+			highestScore += 1;
+		}
+		roundWinner = null;
+	}
+	if(highestScore == 5){
+		endGame();
+	}
+	else playRound();
+}
+
+/* CONFIGURE SOCKET */
+socket.configure(function (){
+    socket.set('log level', 0);
+    socket.set('authorization', function (handshakeData, callback) {
+      callback(null, true);
+    });
+});
 
 
-    /**
-     *  Initializes the sample application.
-     */
-    self.initialize = function() {
-        self.setupVariables();
-        self.populateCache();
-        self.setupTerminationHandlers();
+/* HANDLE CONNECTIONS AND DISCONNECTS */
+socket.sockets.on('connection', function (client) {
+	if(players.length >= MAX_PLAYERS){
+		client.emit('disconnect');
+		return;
+	}
+    client.userid = UUID();
+    client.emit('connect', {id: client.userid, game: ingame});
+    lobby.push(client);
 
-        // Create the express server and routes.
-        self.initializeServer();
-    };
+    client.on('disconnect', function (){
+        disconnect(client);
+    });
+    client.on('setName', function (data){
+        setName(client, data);
+    });
+    client.on('getCards', function (data){
+    	getCards(client, data);
+    });
+    client.on('message', function (data){
+    	sendMessage(client, data);
+    });
+    client.on('submitCards', function (data){
+    	addSubmission(client.userid, data.sub);
+    });
+    client.on('submitPick', function (data){
+    	setRoundWinner(data.userid);
+    })
+});
 
 
-    /**
-     *  Start the server (starts up the sample application).
-     */
-    self.start = function() {
-        //  Start the app on the specific interface (and port).
-        self.app.listen(self.port, self.ipaddress, function() {
-            console.log('%s: Node server started on %s:%d ...',
-                        Date(Date.now() ), self.ipaddress, self.port);
-        });
-    };
 
-};   /*  Sample Application.  */
-
-
-
-/**
- *  main():  Main code.
- */
-var zapp = new SampleApp();
-zapp.initialize();
-zapp.start();
-
+/********	TODO LIST	********
+ *
+ *	don't send card multiple times
+ *	sent cards contain 'undefined'
+ *
+ *******************************/

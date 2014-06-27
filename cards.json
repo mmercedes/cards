@@ -1,0 +1,30 @@
+{
+	"wcards": [
+		"Being on fire.",
+		"Racism.",
+		"Old-people smell.",
+		"A micropenis.",
+		"Women in yogurt commercials.",
+		"Classist undertones.",
+		"Not giving a shit about the Third World.",
+		"Inserting a mason jar into my anus.",
+		"Court-ordered rehab.",
+		"A windmill full of corpses.",
+		"The gays.",
+		"An oversized lollipop.",
+		"African children.",
+		"An asymmetric boob job.",
+		"Bingeing and purging.",
+		"The hardworking Mexican."
+	],
+	"bcards": [
+		{"text":"How did I lose my virginity?", "inputs":1},
+		{"text":"Why can't I sleep at night?", "inputs":1},
+		{"text":"What's that smell?", "inputs":1},
+		{"text":"I got 99 problems but __________ ain't one.", "inputs":1},
+		{"text":"Maybe she's born with it. Maybe it's __________.", "inputs":1},
+		{"text":"What's the next Happy Meal toy?", "inputs":1},
+		{"text":"It's a pity that kids these days are all getting involved with __________.", "inputs":1},
+		{"text":"Today on Maury: \"Help! My son is __________.\"", "inputs":1}
+	]
+}

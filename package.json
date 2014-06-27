@@ -1,7 +1,7 @@
 {
-  "name": "OpenShift-Sample-App",
+  "name": "cards",
   "version": "1.0.0",
-  "description": "OpenShift Sample Application",
+  "description": "cards-online test",
   "keywords": [
     "OpenShift",
     "Node.js",
@@ -9,14 +9,12 @@
     "openshift"
   ],
   "author": {
-    "name": "OpenShift",
-    "email": "ramr@example.org",
-    "url": "http://www.openshift.com/"
+    "name": "mmercedes"
   },
-  "homepage": "http://www.openshift.com/",
+  "homepage": "https://github.com/mmercedes/cards",
   "repository": {
     "type": "git",
-    "url": "https://github.com/openshift/origin-server"
+    "url": "https://github.com/mmercedes/cards"
   },
 
   "engines": {
@@ -25,7 +23,9 @@
   },
 
   "dependencies": {
-    "express": "~3.4.4"
+    "express": "~3.4.4",
+    "socket.io": "latest",
+    "node-uuid": "1.4.1"
   },
   "devDependencies": {},
   "bundleDependencies": [],

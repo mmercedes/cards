@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- META -->
+	<title>CARDS</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<meta name="description" content="online cards test" />
+
+	<!-- Favicon -->
+	<link rel='shortcut icon' type='image/x-icon' href='css/img/favicon.ico'/>
+
+	<!-- CSS -->
+	<link rel="stylesheet" type="text/css" href="thirdparty/css/kickstart.css" media="all" />
+	<link rel="stylesheet" type="text/css" href="thirdparty/css/animate.min.css" media="all">
+	<link rel="stylesheet" type="text/css" href="css/style.css" media="all" />
+
+	<!-- Javascript -->
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script type="text/javascript" src="thirdparty/js/kickstart.js"></script>
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="client.js"></script>
+</head>
+<body>
+
+	<!-- Sidebar -->
+	<div id='sidebar' class="animated slideInRight" style="display:none;">
+		<h3 class='center'>PLAYERS</h3>
+		<div id="pn0" class="col_12 visible animated bounceInDown" style="visibility:hidden;"></div>
+		<div id="pn1" class="col_12 visible animated bounceInDown" style="visibility:hidden;"></div>
+		<div id="pn2" class="col_12 visible animated bounceInDown" style="visibility:hidden;"></div>
+		<div id="pn3" class="col_12 visible animated bounceInDown" style="visibility:hidden;"></div>
+		<div id="pn4" class="col_12 visible animated bounceInDown" style="visibility:hidden;"></div>
+		<div id="pn5" class="col_12 visible animated bounceInDown" style="visibility:hidden;"></div>
+		<div id="pn6" class="col_12 visible animated bounceInDown" style="visibility:hidden;"></div>
+		<div id="pn7" class="col_12 visible animated bounceInDown" style="visibility:hidden;"></div>
+		<div id="chat" class='center'>
+			<textarea id="chatbox" readonly></textarea>
+			<input id="chatmsg" type="text" placeholder="Send a Message" maxlength="140" onKeyPress="sendMessage(event)"/>
+		</div>
+	</div>
+
+	<!-- Content -->
+	<div id='content' style="width:100%;">
+
+		<div id='topbar' class="center" style="padding-top:10%;">
+			<h1> PLAY A GAME OF CARDS! </h1>
+			<input id="nameInput" type="text" placeholder="Enter a Username" />
+			<button class="small green" onclick="setName()">
+				 <i class="icon-play-circle"></i> JOIN</button>
+		</div>
+
+		<div id='blackcard' class="animated bounceInLeft" style="display:none;">
+			<h5 id='bcardh'></h5>
+		</div>
+
+		<!-- Hand -->
+		<div id='hand' style="display:none;">
+			<div id='card0' class="card animated fadeInUp"
+				onclick="selectCard(this);" style="visibility:hidden;">
+			<p id='card0p'></p>
+			</div>
+			<div id='card1' class="card animated fadeInUp"
+				onclick="selectCard(this);" style="visibility:hidden;">
+			<p id='card1p'></p>
+			</div>
+			<div id='card2' class="card animated fadeInUp"
+				onclick="selectCard(this);" style="visibility:hidden;">
+			<p id='card2p'></p>
+			</div>
+			<div id='card3' class="card animated fadeInUp"
+				onclick="selectCard(this);" style="visibility:hidden;">
+			<p id='card3p'></p>
+			</div>
+			<div id='card4' class="card animated fadeInUp"
+				onclick="selectCard(this);" style="visibility:hidden;">
+			<p id='card4p'></p>
+			</div>
+			<div id='card5' class="card animated fadeInUp"
+				onclick="selectCard(this);" style="visibility:hidden;">
+			<p id='card5p'></p>
+			</div>
+			<div id='card6' class="card animated fadeInUp"
+				onclick="selectCard(this);" style="visibility:hidden;">
+			<p id='card6p'></p>
+			</div>
+			<div id='card7' class="card animated fadeInUp"
+				onclick="selectCard(this);" style="visibility:hidden;">
+			<p id='card7p'></p>
+			</div>
+		</div>
+
+
+	</div>
+
+</body>
+</html>
