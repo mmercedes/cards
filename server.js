@@ -32,8 +32,6 @@ var MIN_PLAYERS = 2;
 
 
 if (typeof ip === "undefined") {
-    //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
-    //  allows us to run/test the app locally.
     console.warn('No OPENSHIFT_NODEJS_IP var, using localhost');
     ip = "localhost";
 };
@@ -42,6 +40,7 @@ server.listen(port, ip, function (){
     console.log("\n STARTED SERVER ON PORT " + port + "\n");
 });
 
+var socket = require('socket.io').listen(server);
 
 app.get( '/', function( req, res ){
     res.sendfile('game.html');
