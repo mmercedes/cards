@@ -1,7 +1,7 @@
 
 /* SERVER STATE GLOBALS */
 var ip = process.env.OPENSHIFT_NODEJS_IP;
-var port = process.env.OPENSHIFT_NODEJS_PORT || 4004;
+var port = parseInt(process.env.OPENSHIFT_NODEJS_PORT) || 8080;
 var fs = require('fs');
 var express = require('express');
 var http = require('http');
@@ -38,10 +38,10 @@ if (typeof ip === "undefined") {
     ip = "localhost";
 };
 
-server.listen(port);
-console.log("\n STARTED SERVER ON PORT " + port + "\n");
+server.listen(port, ip, function (){
+    console.log("\n STARTED SERVER ON PORT " + port + "\n");
+});
 
-var socket = require('socket.io').listen(server);
 
 app.get( '/', function( req, res ){
     res.sendfile('game.html');
