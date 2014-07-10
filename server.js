@@ -1,7 +1,7 @@
 
 /* SERVER STATE GLOBALS */
 var ip = process.env.OPENSHIFT_NODEJS_IP;
-var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
+var port = process.env.OPENSHIFT_NODEJS_PORT || 4004;
 var fs = require('fs');
 var express = require('express');
 var http = require('http');
