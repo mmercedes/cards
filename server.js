@@ -216,12 +216,12 @@ function updateScore(){
 }
 
 /* CONFIGURE SOCKET */
-socket.configure(function (){
-    socket.set('log level', 0);
-    socket.set('authorization', function (handshakeData, callback) {
-      callback(null, true);
-    });
-});
+// socket.configure(function (){
+//     socket.set('log level', 0);
+//     socket.set('authorization', function (handshakeData, callback) {
+//       callback(null, true);
+//     });
+// });
 
 
 /* HANDLE CONNECTIONS AND DISCONNECTS */
