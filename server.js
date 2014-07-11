@@ -180,7 +180,6 @@ function addSubmission(id, submission){
 
 function forwardSubmissions(){
 	if(submissions.length > 0){
-		console.log(submitIDs);
 		judge.emit('judgeCards', {subs:submissions, subIDs:submitIDs});
 		submissions = [];
 		submitIDs = [];
@@ -215,12 +214,12 @@ function updateScore(){
 }
 
 /* CONFIGURE SOCKET */
-// socket.configure(function (){
-//     socket.set('log level', 0);
-//     socket.set('authorization', function (handshakeData, callback) {
-//       callback(null, true);
-//     });
-// });
+socket.configure(function (){
+    socket.set('log level', 0);
+    socket.set('authorization', function (handshakeData, callback) {
+      callback(null, true);
+    });
+});
 
 
 /* HANDLE CONNECTIONS AND DISCONNECTS */

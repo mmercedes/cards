@@ -235,9 +235,9 @@ function submitCards(){
 	socket.emit('submitCards', {sub:submission});
 	setTimeout(function (){
 		socket.emit('getCards', {num:selectedCards.length});
+		selectedData = [];
+		selectedCards = [];
 	}, 2000);
-	selectedData = [];
-	selectedCards = [];
 }
 
 function submitJudgePick(card){
@@ -297,9 +297,7 @@ socket.on('message', function (data){
 });
 
 socket.on('judgeCards', function (data){
-	console.log(data.subIDs);
 	submitIDs = data.subIDs.slice(0);
-	console.log(submitIDs);
 	setJudgeCards(data.subs);
 });
 
