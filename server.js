@@ -16,9 +16,7 @@ var players = [];
 var pendPlayers = [];
 var highestScore = 0;
 var submissions = [];
-var submitIDs = [];
 var ingame = false;
-var judge;
 var cards = JSON.parse(fs.readFileSync("cards.json", "utf8"));
 var roundInfo = {};
 var roundWinner = null;
@@ -133,10 +131,7 @@ function playRound(){
     }
 	console.log("ROUND STARTED");
 
-    judge = players[Math.floor(Math.random()*players.length)];
-
 	roundInfo.card = getBlackCard();
-    roundInfo.judge = judge.userid;
 	roundInfo.players = [];
 
 	for(var i = 0; i < players.length; i++){
@@ -169,8 +164,7 @@ function getCards(client, data){
 }
 
 function addSubmission(id, submission){
-	submissions.push(submission);
-	submitIDs.push(id);
+	submissions.push({text:submission, votes:0, userid:id);
 	if(submissions.length === players.length){
 		clearTimeout(submitTimeout);
 		forwardSubmissions();
@@ -178,28 +172,29 @@ function addSubmission(id, submission){
 	}
 }
 
-function forwardSubmissions(){
-	if(submissions.length > 0){
-		judge.emit('judgeCards', {subs:submissions, subIDs:submitIDs});
-		submissions = [];
-		submitIDs = [];
-	}
-	else console.log("NO SUBMISSIONS RECEIVED");
-}
-
-function setRoundWinner(userid){
-	for(var i = 0; i < players.length; i++){
-		if(players[i].userid === userid){
-			roundWinner = players[i];
-			break;
+function addVote(userid){
+	for(var i = 0; i < submissions.length; i++){
+		if(submissions[i].userid === userid){
+			submissions[i].votes += 1;
+			return;
 		}
 	}
-	clearTimeout(judgeTimeout);
-	updateScore();
+}
+
+function forwardSubmissions(){
+	socket.sockets.emit('judgeCards', {subs:submissions});
 }
 
 function updateScore(){
 	console.log("JUDGE TIME OVER");
+	var roundWinner = null;
+	var highestVotes = 0;
+	for(var i = 0; i < submissions.length; i++){
+		if(submissions[i].votes > highestVotes){
+			roundWinner = submissions[i].userid;
+			highestVotes = submissions[i].votes;
+		}
+	}
 	if(roundWinner != null){
 		roundWinner.score += 1;
 		if(roundWinner.score > highestScore){
@@ -247,9 +242,9 @@ socket.sockets.on('connection', function (client) {
     client.on('submitCards', function (data){
     	addSubmission(client.userid, data.sub);
     });
-    client.on('submitPick', function (data){
-    	setRoundWinner(data.userid);
-    })
+    client.on('vote', function (data){
+    	addVote(data.userid);
+    });
 });
 
 

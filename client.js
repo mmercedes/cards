@@ -146,15 +146,16 @@ function setPlayers(players){
 
 function setRoundData(data){
 	inputs = data.card.inputs;
-	judge = (myId === data.judge);
 	document.getElementById('bcardh').innerHTML = data.card.text;
 	document.getElementById('blackcard').removeAttribute('style');
 	setPlayers(data.players);
-	if(judge) setJudge();
 }
 
 function setJudge(){
+	var topbarh = document.getElementById('topbarh');
+
 	hideHand();
+	topbarh.innerHTML = "WAITING ON SUBMISSIONS"
 
 	for(var i = 0; i < CARD_COUNT; i++){
 		Hand[i].save();
@@ -162,6 +163,7 @@ function setJudge(){
 }
 
 function setJudgeCards(submissions){
+	"VOTE FOR YOUR FAVORITE"
 	for(var i = 0; i < submissions.length; i++){
 		Hand[i].setText(submissions[i]);
 		Hand[i].show();
@@ -204,24 +206,15 @@ function postMessage(data){
 }
 
 function updateTimer(){
-	timer--;
 	var topbarh = document.getElementById('topbarh');
-	if(judge){
-		topbarh.innerHTML = 'WAITING ON SUBMISSIONS : ' + timer.toString();
-	}
-	else {
-		topbarh.innerHTML = 'SUBMIT TIME LEFT : ' + timer.toString();
-	}
+
+	timer--;
+	topbarh.innerHTML = 'SUBMIT TIME LEFT : ' + timer.toString();
+	
 	if(timer === 0){
 		window.clearInterval(timeInterval);
 		timer = 60;
-		if(judge){
-			topbarh.innerHTML = 'SELECT YOUR FAVORITE';
-		}
-		else {
-			topbarh.innerHTML = 'THE JUDGE IS PICKING THEIR FAVORITE';
-			submitCards();
-		}
+		submitCards();
 	}
 }
 
@@ -248,13 +241,11 @@ function submitJudgePick(card){
 	Hand[index].hide();
 	setTimeout(function(){
 		hideHand();
-		setTimeout(function(){
-			for(var i = 0; i < CARD_COUNT; i++){
-				Hand[i].load();
-				Hand[i].show();
-			}
-			showHand();
-		})
+		for(var i = 0; i < CARD_COUNT; i++){
+			Hand[i].load();
+			Hand[i].show();
+		}
+		showHand();
 	}, 500);
 }
 
@@ -297,7 +288,6 @@ socket.on('message', function (data){
 });
 
 socket.on('judgeCards', function (data){
-	submitIDs = data.subIDs.slice(0);
 	setJudgeCards(data.subs);
 });
 
@@ -305,8 +295,5 @@ socket.on('judgeCards', function (data){
  *
  *	purge old messages from chat
  *	formatting for chat
- *	show hand/cards for judge
- *	judge sees all cards
- 	for a bit when submits are set
  *
  ********				********/
