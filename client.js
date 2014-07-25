@@ -156,16 +156,18 @@ function setJudge(){
 
 	hideHand();
 	topbarh.innerHTML = "WAITING ON SUBMISSIONS"
+	judge = true;
+}
+
+function setJudgeCards(submissions){
+	var topbarh = document.getElementById('topbarh');
+	topbarh.innerHTML = "VOTE FOR YOUR FAVORITE";
 
 	for(var i = 0; i < CARD_COUNT; i++){
 		Hand[i].save();
 	}
-}
-
-function setJudgeCards(submissions){
-	"VOTE FOR YOUR FAVORITE"
 	for(var i = 0; i < submissions.length; i++){
-		Hand[i].setText(submissions[i]);
+		Hand[i].setText(submissions[i].text);
 		Hand[i].show();
 	}
 	for(i = submissions.length; i < CARD_COUNT; i++){
@@ -176,14 +178,16 @@ function setJudgeCards(submissions){
 
 function selectCard(card){
 	if(!judge){
-		if(selectedCards.length === inputs){
-			selectedCards[0].deselect();
-		}
 		var index = parseInt(card.id.charAt(4),10);
 		Hand[index].select();
+
+		if(selectedCards.length === inputs){
+			submitCards();
+			//selectedCards[0].deselect();
+		}
 	}
 	else {
-		submitJudgePick(card);
+		submitVote(card);
 	}
 }
 
@@ -210,11 +214,11 @@ function updateTimer(){
 
 	timer--;
 	topbarh.innerHTML = 'SUBMIT TIME LEFT : ' + timer.toString();
-	
+
 	if(timer === 0){
 		window.clearInterval(timeInterval);
 		timer = 60;
-		submitCards();
+		//submitCards();
 	}
 }
 
@@ -225,28 +229,30 @@ function submitCards(){
 		selectedCards[i].hide();
 	}
 	var submission = selectedData.join('\n\n');
+
 	socket.emit('submitCards', {sub:submission});
+	hideHand();
+
 	setTimeout(function (){
 		socket.emit('getCards', {num:selectedCards.length});
 		selectedData = [];
 		selectedCards = [];
-	}, 2000);
+	}, 500);
 }
 
-function submitJudgePick(card){
+function submitVote(card){
 	var index = parseInt(card.id.charAt(4),10);
 	console.log(index);
 	socket.emit('submitPick', {userid:submitIDs[index]});
 	submitIDs = [];
 	Hand[index].hide();
-	setTimeout(function(){
-		hideHand();
-		for(var i = 0; i < CARD_COUNT; i++){
-			Hand[i].load();
-			Hand[i].show();
-		}
-		showHand();
-	}, 500);
+	judge = false;
+
+	for(var i = 0; i < CARD_COUNT; i++){
+		Hand[i].load();
+		Hand[i].show();
+	}
+	showHand();
 }
 
 

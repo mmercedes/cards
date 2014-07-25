@@ -164,7 +164,7 @@ function getCards(client, data){
 }
 
 function addSubmission(id, submission){
-	submissions.push({text:submission, votes:0, userid:id);
+	submissions.push({text:submission, votes:0, userid:id});
 	if(submissions.length === players.length){
 		clearTimeout(submitTimeout);
 		forwardSubmissions();
